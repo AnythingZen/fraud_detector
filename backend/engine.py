@@ -10,7 +10,7 @@ import hashlib
 from datetime import datetime
 
 # ---------------------------------------------------------------------------
-# Constants — no need to modify these
+# Constants
 # ---------------------------------------------------------------------------
 
 DISPOSABLE_DOMAINS = {
@@ -36,7 +36,7 @@ _EMAIL_DOMAINS = [
 def make_email(user_id: str) -> str:
     """
     Turns a raw User ID (big integer string) into a fake but consistent email.
-    Uses MD5 so the same user_id always gets the same email — no randomness.
+    Uses MD5 so the same user_id always gets the same email = no randomness.
 
     How it works:
       1. Hash the user_id string with MD5 -> gives us a hex digest
@@ -113,16 +113,18 @@ class FraudEngine:
 
     def _get_status(self, score: int) -> str:
         """
-        TODO -- implement this first, it's the simplest one.
-
         Rules:
           score >= 4  -> "blocked"
           score >= 2  -> "flagged"
           else        -> "clean"
-
-        Hint: a chain of if/elif/else is all you need.
         """
-        raise NotImplementedError("implement _get_status")
+        if (score >= 4):
+            return "blocked"
+        elif (score >= 2):
+            return "flagged"
+        else:
+            return "clean"
+
 
     # ------------------------------------------------------------------
     # Individual rule methods
