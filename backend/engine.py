@@ -136,7 +136,7 @@ class FraudEngine:
 
     def _check_disposable_email(self, row: dict, all_rows: list) -> tuple:
         """
-        TODO -- worth +2 points.
+        worth +2 points.
 
         Steps:
           1. Get row["email"] (already set by score_user).
@@ -144,9 +144,12 @@ class FraudEngine:
           3. Check if domain is in DISPOSABLE_DOMAINS (the module-level set).
           4. Return (2, "Disposable email domain") if yes, (0, "") if no.
 
-        Hint: "user@tempmail.com".split("@") gives ["user", "tempmail.com"]
         """
-        raise NotImplementedError("implement _check_disposable_email")
+        email = row["email"]
+        username, domain = email.split("@")
+        if domain in DISPOSABLE_DOMAINS:
+            return (2, "Disposable email domain")
+        return (0, "")
 
     def _check_ip_reuse(self, row: dict, all_rows: list) -> tuple:
         """
