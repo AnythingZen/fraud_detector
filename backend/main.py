@@ -90,15 +90,15 @@ def post_review(user_id: str, body: ReviewBody):
     decisions[user_id] = body.decision
     return {"ok": True}
 
-@app.post("/agent/explain/{user_id}")
-def post_explain(user_id: str):
+@app.post("/agent/explain/{row_index}")
+def post_explain(row_index: str):
     """
-    find the user's row and return a Gemini explanation.
+    find the specific row by its CSV index and return a Gemini explanation.
     """
     global _scored_rows
-    user_row = next((r for r in _scored_rows if r["User ID"] == user_id), None)
+    user_row = next((r for r in _scored_rows if r["index"] == row_index), None)
     if user_row is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Row not found")
     explanation = fraud_agent.explain(user_row, user_row["triggers"])
     return {"explanation": explanation}
 

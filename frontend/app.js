@@ -2,7 +2,7 @@ const API = "http://localhost:8000";
 
 let allRows = [];
 let currentFilter = "all";
-const rowsByUserId = new Map(); // userId → row, used by handleExplain
+const rowsByIndex = new Map(); // CSV index → row, used by handleExplain
 
 // ============================================================
 // Each function talks to a different backend endpoint.
@@ -73,11 +73,12 @@ function renderTable(rows) {
 	}
 
 	// Populate lookup map so handleExplain can find rows without embedding data in onclick
-	rows.forEach(r => rowsByUserId.set(r["User ID"], r));
+	rows.forEach(r => rowsByIndex.set(r["index"], r));
 
 	tbody.innerHTML = filtered
 		.map((row) => {
 			const uid = row["User ID"] ?? "";
+			const rowIdx = row["index"] ?? uid;
 			return `
       <tr>
         <td>${row.email ?? "—"}</td>
@@ -94,7 +95,7 @@ function renderTable(rows) {
             <button class="btn btn-approve"
               onclick="handleReview('${uid}', 'approve', this)">Approve</button>
             <button class="btn btn-explain"
-              onclick="handleExplain('${uid}')">Explain</button>
+              onclick="handleExplain('${rowIdx}')">Explain</button>
           </div>
         </td>
       </tr>`;
@@ -121,8 +122,8 @@ async function handleReview(userId, decision, btn) {
 	}
 }
 
-async function handleExplain(userId) {
-	const row = rowsByUserId.get(userId) ?? {};
+async function handleExplain(rowIndex) {
+	const row = rowsByIndex.get(rowIndex) ?? {};
 	const email = row.email ?? "—";
 	const triggers = row.triggers ?? [];
 
@@ -135,7 +136,7 @@ async function handleExplain(userId) {
     <p class="panel-loading">Asking Gemini...</p>`;
 
 	try {
-		const data = await explainUser(userId);
+		const data = await explainUser(rowIndex);
 		const triggerTags = triggers.length
 			? triggers.map((t) => `<span class="trigger-tag">${t}</span>`).join("")
 			: "<em>none</em>";
