@@ -84,12 +84,6 @@ def get_signups():
 def post_review(user_id: str, body: ReviewBody):
     """
     save a block/approve decision for a user.
-
-    Steps:
-      1. Validate body.decision is "block" or "approve".
-         If not: raise HTTPException(status_code=400, detail="Invalid decision")
-      2. decisions[user_id] = body.decision
-      3. Return {"ok": True}
     """
     if body.decision != "block" or body.decision != "approve":
         raise HTTPException(status_code=400, detail="Invalid decision")
@@ -112,17 +106,12 @@ def post_explain(user_id: str):
 @app.get("/stats")
 def get_stats():
     """
-    TODO — return aggregate fraud stats.
-
-    Steps:
-      1. total = len(_scored_rows)
-      2. flagged = count rows where status == "flagged"
-      3. blocked = count rows where status == "blocked"
-      4. fraud_rate = round((flagged + blocked) / total, 2) if total > 0 else 0
-      5. Return {"total": total, "flagged": flagged, "blocked": blocked, "fraud_rate": fraud_rate}
-
-    Hint for counting: sum(1 for r in _scored_rows if r["status"] == "flagged")
+    return aggregate fraud stats.
     """
+    global _scored_rows
+    total = len(_scored_rows)
+    flagged = sum(1 for r in _scored_rows if r["status"] == "flagged")
+    blocked = sum(1 for r in _scored_rows if r["status"] == "blocked")
+    fraud_rate = round((flagged + blocked)/total, 2) if total > 0 else 0
 
-    
-    raise NotImplementedError("implement get_stats")
+    return {"total": total, "flagged": flagged, "blocked": blocked, "fraud_rate": fraud_rate}
