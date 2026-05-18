@@ -193,24 +193,26 @@ class FraudEngine:
     
     def _check_linux_device(self, row: dict, all_rows: list) -> tuple:
         """
-        TODO -- worth +1 point.
+        worth +1 point.
 
         Linux desktops with no purchase history are a common bot signal.
-        We don't have purchase history in this dataset, so treat any Linux
-        OS as the flag (in a real system you'd add a purchase lookup).
-
+        We don't have purchase history in this dataset, so use only Linux
+        OS as the flag.
         Steps:
           1. Get row["OS Name and Version"] (e.g. "Linux x86_64 5.4").
           2. Check if "Linux" appears in it (case-insensitive).
           3. Return (1, "Linux device") or (0, "").
 
-        Hint: "Linux" in some_string   OR   some_string.lower()
         """
-        raise NotImplementedError("implement _check_linux_device")
+
+        OSName = row["OS Name and Version"]
+        if "linux" in OSName.lower():
+            return (1, "Linux device")
+        return (0, "")
 
     def _check_fast_session(self, row: dict, all_rows: list) -> tuple:
         """
-        TODO -- worth +1 point.
+        worth +1 point.
 
         If a user's first and second login are less than 2 minutes apart,
         it looks like a bot that immediately hammers the session endpoint.
@@ -223,14 +225,35 @@ class FraudEngine:
           3. Sort those datetimes.
           4. If there are at least 2, compute the gap between [0] and [1].
           5. If gap < 120 seconds, return (1, "Session within 2 min of signup").
-
-        Hint: (dt2 - dt1).total_seconds()
         """
-        raise NotImplementedError("implement _check_fast_session")
+
+        user_id = row["User ID"]
+        same_user_rows = [r for r in all_rows if user_id == r["User ID"]]
+        
+        timestamp = [r["Login Timestamp"] for r in same_user_rows]
+        parsed_timestamps = []
+
+        # parse the timestamp
+        try: 
+            for ts in timestamp:
+                parsed_timestamps.append(
+                    datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f")
+                )
+        except ValueError:
+            pass
+        
+        sorted_parsed_ts = sorted(parsed_timestamps)
+        diff = float('inf')
+        if len(sorted_parsed_ts) >= 2:
+            diff = (sorted_parsed_ts[1] - sorted_parsed_ts[0]).total_seconds()
+
+        if diff < 120:
+            return (1, "Session within 2 min of signup")
+        return (0, "")
 
     def _check_signup_burst(self, row: dict, all_rows: list) -> tuple:
         """
-        TODO -- worth +2 points.
+        worth +2 points.
 
         Multiple *different* users signing up from the same IP within 5 seconds
         of each other = bot farm or account factory.
@@ -242,7 +265,4 @@ class FraudEngine:
           4. Check if any of those timestamps is within 5 seconds of this row's timestamp.
              Use abs((other_dt - this_dt).total_seconds()) < 5
           5. If yes, return (2, "Signup burst on same IP").
-
-        Hint: reuse the same datetime.strptime pattern from _check_fast_session.
         """
-        raise NotImplementedError("implement _check_signup_burst")
