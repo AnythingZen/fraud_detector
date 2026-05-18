@@ -85,7 +85,7 @@ def post_review(user_id: str, body: ReviewBody):
     """
     save a block/approve decision for a user.
     """
-    if body.decision != "block" or body.decision != "approve":
+    if body.decision not in ("block", "approve"):
         raise HTTPException(status_code=400, detail="Invalid decision")
     decisions[user_id] = body.decision
     return {"ok": True}
@@ -99,7 +99,6 @@ def post_explain(user_id: str):
     user_row = next((r for r in _scored_rows if r["User ID"] == user_id), None)
     if user_row is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
     explanation = fraud_agent.explain(user_row, user_row["triggers"])
     return {"explanation": explanation}
 
