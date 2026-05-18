@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fraud Detector — Splashtop</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header>
+    <h1>Fraud Detector</h1>
+    <p>Splashtop Trial Signup Monitor</p>
+  </header>
+
+  <main>
+
+    <!-- Stat cards -->
+    <div class="stats-grid">
+      <div class="card" id="stat-total">
+        <div class="label">Total Signups</div>
+        <div class="value">—</div>
+      </div>
+      <div class="card flagged" id="stat-flagged">
+        <div class="label">Flagged</div>
+        <div class="value">—</div>
+      </div>
+      <div class="card blocked" id="stat-blocked">
+        <div class="label">Blocked</div>
+        <div class="value">—</div>
+      </div>
+      <div class="card fraud-rate" id="stat-fraud-rate">
+        <div class="label">Fraud Rate</div>
+        <div class="value">—</div>
+      </div>
+    </div>
+
+    <!-- Filter buttons -->
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="flagged">Flagged</button>
+      <button class="filter-btn" data-filter="blocked">Blocked</button>
+      <button class="filter-btn" data-filter="clean">Clean</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>IP Address</th>
+            <th>Country</th>
+            <th>OS</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="7" class="loading">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- AI explanation side panel -->
+  <div id="explain-panel" class="panel hidden">
+    <div class="panel-header">
+      <h3>AI Explanation</h3>
+      <button class="close-btn" id="close-panel">&times;</button>
+    </div>
+    <div class="panel-body" id="panel-content"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
