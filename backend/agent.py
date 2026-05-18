@@ -22,7 +22,7 @@ class FraudAgent:
     def __init__(self):
         # gemini-2.0-flash free
         self.client = genai.Client()
-        self.model = "gemini-2.0-flash"
+        self.model = "gemini-2.5-flash"
 
     def explain(self, row: dict, triggers: list[str]) -> str:
         """
@@ -40,6 +40,7 @@ class FraudAgent:
                 You are a fraud analyst reviewing a trial account signup.
                 {signals}
                 In 2-3 sentences, explain why this account might look suspicious.
+                For email's username (NOT THE DOMAIN), its a randomized prefix for my dataset for privacy, so ignore that.
                 What would be the recommended action you suggest: : block / review / approve
                 """
         

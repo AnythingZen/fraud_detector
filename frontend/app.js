@@ -2,6 +2,7 @@ const API = "http://localhost:8000";
 
 let allRows = [];
 let currentFilter = "all";
+const rowsByUserId = new Map(); // userId → row, used by handleExplain
 
 // ============================================================
 // Each function talks to a different backend endpoint.
@@ -71,10 +72,12 @@ function renderTable(rows) {
 		return;
 	}
 
+	// Populate lookup map so handleExplain can find rows without embedding data in onclick
+	rows.forEach(r => rowsByUserId.set(r["User ID"], r));
+
 	tbody.innerHTML = filtered
 		.map((row) => {
 			const uid = row["User ID"] ?? "";
-			const email = (row.email ?? "—").replace(/'/g, "\\'");
 			return `
       <tr>
         <td>${row.email ?? "—"}</td>
@@ -91,7 +94,7 @@ function renderTable(rows) {
             <button class="btn btn-approve"
               onclick="handleReview('${uid}', 'approve', this)">Approve</button>
             <button class="btn btn-explain"
-              onclick="handleExplain('${uid}', '${email}', ${JSON.stringify(row.triggers ?? [])})">Explain</button>
+              onclick="handleExplain('${uid}')">Explain</button>
           </div>
         </td>
       </tr>`;
@@ -118,7 +121,11 @@ async function handleReview(userId, decision, btn) {
 	}
 }
 
-async function handleExplain(userId, email, triggers) {
+async function handleExplain(userId) {
+	const row = rowsByUserId.get(userId) ?? {};
+	const email = row.email ?? "—";
+	const triggers = row.triggers ?? [];
+
 	const panel = document.getElementById("explain-panel");
 	const content = document.getElementById("panel-content");
 
@@ -130,18 +137,21 @@ async function handleExplain(userId, email, triggers) {
 	try {
 		const data = await explainUser(userId);
 		const triggerTags = triggers.length
-			? triggers
-					.map((t) => `<span class="trigger-tag">${t}</span>`)
-					.join("")
+			? triggers.map((t) => `<span class="trigger-tag">${t}</span>`).join("")
 			: "<em>none</em>";
+
+		// Build explanation element separately to use textContent (safe for any text Gemini returns)
+		const explanationEl = document.createElement("p");
+		explanationEl.className = "panel-explanation";
+		explanationEl.textContent = data.explanation ?? "No explanation returned.";
 
 		content.innerHTML = `
       <div class="panel-meta">User: <strong>${email}</strong></div>
-      <p class="panel-explanation">${data.explanation}</p>
       <div class="triggers-section">
         <h4>Triggered Rules</h4>
         ${triggerTags}
       </div>`;
+		content.appendChild(explanationEl);
 	} catch (e) {
 		content.innerHTML = `<p style="color:#ef4444">Error: ${e.message}</p>`;
 	}
@@ -181,7 +191,7 @@ async function init() {
 	} catch (e) {
 		document.getElementById("table-body").innerHTML =
 			`<tr><td colspan="7" class="loading" style="color:#ef4444">
-        Backend unreachable — is uvicorn running?<br><small>${e.message}</small>
+        Backend unreachable<br><small>${e.message}</small>
       </td></tr>`;
 	}
 }

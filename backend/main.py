@@ -16,7 +16,7 @@ from agent import FraudAgent
 # ---------------------------------------------------------------------------
 
 DATA_PATH = "data/rba-dataset.csv"
-NROWS = 1000  # sample size
+NROWS = 3000  # sample size
 
 # ---------------------------------------------------------------------------
 # Shared state (module-level singletons)
