@@ -1,9 +1,10 @@
 """
 engine.py — Rule-based fraud scoring for suspicious trial signups.
 
-YOUR TASK: implement each _check_* method. The class structure,
-dispatcher loop, and constants are already wired up for you.
-Read each docstring, then write the body. One method at a time.
+Dataset's feature:
+index,Login Timestamp,User ID,Round-Trip Time [ms],IP Address,Country,Region,City,
+ASN,User Agent String,Browser Name and Version,OS Name and Version,Device Type,
+Login Successful,Is Attack IP,Is Account Takeover
 """
 
 import hashlib
@@ -153,7 +154,7 @@ class FraudEngine:
 
     def _check_ip_reuse(self, row: dict, all_rows: list) -> tuple:
         """
-        TODO -- worth +2 points.
+        worth +2 points.
 
         An IP address used by more than 3 distinct users is suspicious
         (could be a VPN, proxy, or bot farm).
@@ -163,10 +164,17 @@ class FraudEngine:
           2. Loop through all_rows and count how many rows share this IP
              but have a different User ID. (Use a set to count unique IDs.)
           3. If that count > 3, return (2, "IP shared by >3 accounts").
-
-        Hint: {r["User ID"] for r in all_rows if r["IP Address"] == ip}
         """
-        raise NotImplementedError("implement _check_ip_reuse")
+        ip_address = row["IP Address"]
+        diff_user__but_same_ip = set()
+
+        for r in all_rows:
+            if r["IP Address"] == ip_address:
+                diff_user__but_same_ip.add(r["User ID"])
+            if len(diff_user__but_same_ip) > 3:
+                return (2, "IP shared by >3 accounts")
+
+        return (0, "")
 
     def _check_high_risk_country(self, row: dict, all_rows: list) -> tuple:
         """
