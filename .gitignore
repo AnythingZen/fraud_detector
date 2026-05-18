@@ -3,5 +3,4 @@ backend/.venv/
 .env
 .claude
 CLAUDE.md
-__pycache__/
-*.pyc
+backend/__pycache__/
