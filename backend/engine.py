@@ -166,27 +166,31 @@ class FraudEngine:
           3. If that count > 3, return (2, "IP shared by >3 accounts").
         """
         ip_address = row["IP Address"]
-        diff_user__but_same_ip = set()
+        diff_user_but_same_ip = set()
 
         for r in all_rows:
             if r["IP Address"] == ip_address:
-                diff_user__but_same_ip.add(r["User ID"])
-            if len(diff_user__but_same_ip) > 3:
+                diff_user_but_same_ip.add(r["User ID"])
+            if len(diff_user_but_same_ip) > 3:
                 return (2, "IP shared by >3 accounts")
 
         return (0, "")
 
     def _check_high_risk_country(self, row: dict, all_rows: list) -> tuple:
         """
-        TODO -- worth +1 point.
+        worth +1 point.
 
         Steps:
           1. Get row["Country"] (2-letter ISO code, e.g. "RU").
           2. Check against HIGH_RISK_COUNTRIES.
           3. Return (1, "High-risk country") or (0, "").
         """
-        raise NotImplementedError("implement _check_high_risk_country")
-
+        country = row["Country"]
+        if country in HIGH_RISK_COUNTRIES:
+            return (1, "High-risk country")
+        
+        return (0, "")
+    
     def _check_linux_device(self, row: dict, all_rows: list) -> tuple:
         """
         TODO -- worth +1 point.
