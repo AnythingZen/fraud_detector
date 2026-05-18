@@ -139,12 +139,6 @@ class FraudEngine:
         """
         worth +2 points.
 
-        Steps:
-          1. Get row["email"] (already set by score_user).
-          2. Split on "@" to get the domain part.
-          3. Check if domain is in DISPOSABLE_DOMAINS (the module-level set).
-          4. Return (2, "Disposable email domain") if yes, (0, "") if no.
-
         """
         email = row["email"]
         username, domain = email.split("@")
@@ -159,11 +153,6 @@ class FraudEngine:
         An IP address used by more than 3 distinct users is suspicious
         (could be a VPN, proxy, or bot farm).
 
-        Steps:
-          1. Get the IP of this row: row["IP Address"]
-          2. Loop through all_rows and count how many rows share this IP
-             but have a different User ID. (Use a set to count unique IDs.)
-          3. If that count > 3, return (2, "IP shared by >3 accounts").
         """
         ip_address = row["IP Address"]
         diff_user_but_same_ip = set()
@@ -180,10 +169,7 @@ class FraudEngine:
         """
         worth +1 point.
 
-        Steps:
-          1. Get row["Country"] (2-letter ISO code, e.g. "RU").
-          2. Check against HIGH_RISK_COUNTRIES.
-          3. Return (1, "High-risk country") or (0, "").
+        Checks against the constant HIGH_RISK_COUNTRIES.
         """
         country = row["Country"]
         if country in HIGH_RISK_COUNTRIES:
@@ -198,10 +184,6 @@ class FraudEngine:
         Linux desktops with no purchase history are a common bot signal.
         We don't have purchase history in this dataset, so use only Linux
         OS as the flag.
-        Steps:
-          1. Get row["OS Name and Version"] (e.g. "Linux x86_64 5.4").
-          2. Check if "Linux" appears in it (case-insensitive).
-          3. Return (1, "Linux device") or (0, "").
 
         """
 
@@ -217,14 +199,6 @@ class FraudEngine:
         If a user's first and second login are less than 2 minutes apart,
         it looks like a bot that immediately hammers the session endpoint.
 
-        Steps:
-          1. Filter all_rows for rows with the same User ID as this row.
-          2. Parse "Login Timestamp" strings into datetime objects.
-             Use: datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f")
-             Wrap in try/except in case the timestamp is empty.
-          3. Sort those datetimes.
-          4. If there are at least 2, compute the gap between [0] and [1].
-          5. If gap < 120 seconds, return (1, "Session within 2 min of signup").
         """
 
         user_id = row["User ID"]
@@ -258,11 +232,17 @@ class FraudEngine:
         Multiple *different* users signing up from the same IP within 5 seconds
         of each other = bot farm or account factory.
 
-        Steps:
-          1. Get this row's IP and timestamp (parse the timestamp).
-          2. Filter all_rows to same IP, different User ID.
-          3. Parse their timestamps too; skip rows with unparseable timestamps.
-          4. Check if any of those timestamps is within 5 seconds of this row's timestamp.
-             Use abs((other_dt - this_dt).total_seconds()) < 5
-          5. If yes, return (2, "Signup burst on same IP").
         """
+        IPAddress, timestamp, userID = row["IP Address"], row["Login Timestamp"], row["User ID"]
+
+        try: 
+            parsed_timestamp = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
+            for r in all_rows:
+                if IPAddress == r["IP Address"] and userID != r["User ID"]:
+                    other_timestamp = datetime.strptime(r["Login Timestamp"], "%Y-%m-%d %H:%M:%S.%f")
+                    if abs((other_timestamp - parsed_timestamp).total_seconds()) < 5:
+                        return (2, "Signup burst on same IP")
+        except ValueError:
+            pass
+                    
+        return (0, "")
