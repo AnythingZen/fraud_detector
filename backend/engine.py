@@ -160,8 +160,8 @@ class FraudEngine:
         for r in all_rows:
             if r["IP Address"] == ip_address:
                 diff_user_but_same_ip.add(r["User ID"])
-            if len(diff_user_but_same_ip) > 3:
-                return (2, "IP shared by >3 accounts")
+                if len(diff_user_but_same_ip) > 3:
+                    return (2, "IP shared by >3 accounts")
 
         return (0, "")
 
@@ -207,14 +207,11 @@ class FraudEngine:
         timestamp = [r["Login Timestamp"] for r in same_user_rows]
         parsed_timestamps = []
 
-        # parse the timestamp
-        try: 
-            for ts in timestamp:
-                parsed_timestamps.append(
-                    datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f")
-                )
-        except ValueError:
-            pass
+        for ts in timestamp:
+            try:
+                parsed_timestamps.append(datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f"))
+            except ValueError:
+                pass
         
         sorted_parsed_ts = sorted(parsed_timestamps)
         diff = float('inf')
@@ -235,14 +232,18 @@ class FraudEngine:
         """
         IPAddress, timestamp, userID = row["IP Address"], row["Login Timestamp"], row["User ID"]
 
-        try: 
+        try:
             parsed_timestamp = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
-            for r in all_rows:
-                if IPAddress == r["IP Address"] and userID != r["User ID"]:
-                    other_timestamp = datetime.strptime(r["Login Timestamp"], "%Y-%m-%d %H:%M:%S.%f")
-                    if abs((other_timestamp - parsed_timestamp).total_seconds()) < 5:
-                        return (2, "Signup burst on same IP")
         except ValueError:
-            pass
+            return (0, "")
+
+        for r in all_rows:
+            if IPAddress == r["IP Address"] and userID != r["User ID"]:
+                try:
+                    other_timestamp = datetime.strptime(r["Login Timestamp"], "%Y-%m-%d %H:%M:%S.%f")
+                except ValueError:
+                    continue
+                if abs((other_timestamp - parsed_timestamp).total_seconds()) < 5:
+                    return (2, "Signup burst on same IP")
                     
         return (0, "")
